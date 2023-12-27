@@ -103,7 +103,7 @@ module "alb" {
 
     }
   } 
-
+}
 
 
 resource "aws_security_group" "blog" {
