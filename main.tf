@@ -87,6 +87,14 @@ module "alb" {
     bucket = "my-alb-logs"
   }
 
+  target_groups = {
+    ex-instance = {
+      name_prefix      = "blog-"
+      protocol         = "HTTP"
+      port             = 80
+      target_type      = "instance"
+    }
+
   listeners = {
     ex-http-redirect = {
       port     = 80
