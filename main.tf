@@ -51,6 +51,65 @@ resource "aws_instance" "blog" {
 }
 
 
+module "alb" {
+  source = "terraform-aws-modules/alb/aws"
+
+  name            = "blog-alb"
+  vpc_id          = "module.blog_vpc.id"
+  subnets         = ["module.blog_vpc.public_subnets"]
+  security_group  = module.blog_sg.security_group_id
+
+  # Security Group
+  security_group_ingress_rules = {
+    all_http = {
+      from_port   = 80
+      to_port     = 80
+      ip_protocol = "tcp"
+      description = "HTTP web traffic"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+    all_https = {
+      from_port   = 443
+      to_port     = 443
+      ip_protocol = "tcp"
+      description = "HTTPS web traffic"
+      cidr_ipv4   = "0.0.0.0/0"
+    }
+  }
+  security_group_egress_rules = {
+    all = {
+      ip_protocol = "-1"
+      cidr_ipv4   = "10.0.0.0/16"
+    }
+  }
+
+
+  listeners = {
+    ex-http-redirect = {
+      port     = 80
+      protocol = "HTTP"
+    }
+
+    }
+  }
+
+  target_groups = {
+    ex-instance = {
+      name_prefix      = "blog-"
+      protocol         = "HTTP"
+      port             = 80
+      target_type      = "instance"
+    }
+  }
+
+  tags = {
+    Environment = "Development"
+    Project     = "Example"
+  }
+}
+
+
+
 resource "aws_security_group" "blog" {
   name        = "blog"
   description = "allow http and https in, Allow everthing else out" 
@@ -66,7 +125,7 @@ module "blog_sg" {
   name    = "blog_new" 
 
   vpc_id = module.blog_vpc.vpc_id
-  
+
   ingress_rules = ["http-80-tcp","https-443-tcp"]
   ingress_cidr_blocks  =  ["0.0.0.0/0"]
 
